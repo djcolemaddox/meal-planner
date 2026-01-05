@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Meal Planner</h1>
+            <p class="text-gray-600 mb-4">Smart recipe search and grocery list generation</p>
+            
+            <div class="flex gap-3 items-center">
+                <label class="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 transition">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    <span>Upload Recipe Spreadsheet</span>
+                    <input type="file" id="fileInput" accept=".csv,.tsv,.txt" class="hidden" />
+                </label>
+                <span id="recipeCount" class="text-sm text-gray-600"></span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Search & Results -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Search Box -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Search Recipes</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search by name or ingredient..."
+                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                        <button
+                            id="searchBtn"
+                            class="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition disabled:bg-gray-300 flex items-center gap-2"
+                        >
+                            <svg id="searchIcon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            <span id="searchBtnText">Search</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Filters -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-sm font-semibold text-gray-700">Active Filters:</p>
+                            <button id="clearFiltersBtn" class="text-xs px-2 py-1 bg-red-100 hover:bg-red-200 rounded text-red-700">Clear All</button>
+                        </div>
+                        <div id="activeFilters" class="flex flex-wrap gap-2 mb-3 min-h-[24px]">
+                            <span class="text-xs text-gray-500 italic">None selected</span>
+                        </div>
+                        
+                        <p class="text-xs font-semibold text-gray-600 mb-2">PROTEIN:</p>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <button data-filter="protein" data-value="Beef" class="filter-btn px-3 py-1 bg-red-100 hover:bg-red-200 rounded-full text-sm">🥩 Beef</button>
+                            <button data-filter="protein" data-value="Chicken" class="filter-btn px-3 py-1 bg-yellow-100 hover:bg-yellow-200 rounded-full text-sm">🍗 Chicken</button>
+                            <button data-filter="protein" data-value="Pork" class="filter-btn px-3 py-1 bg-pink-100 hover:bg-pink-200 rounded-full text-sm">🥓 Pork</button>
+                            <button data-filter="protein" data-value="Shrimp" class="filter-btn px-3 py-1 bg-orange-100 hover:bg-orange-200 rounded-full text-sm">🍤 Shrimp</button>
+                            <button data-filter="protein" data-value="Sausage" class="filter-btn px-3 py-1 bg-red-100 hover:bg-red-200 rounded-full text-sm">🌭 Sausage</button>
+                            <button data-filter="protein" data-value="Turkey Sausage" class="filter-btn px-3 py-1 bg-amber-100 hover:bg-amber-200 rounded-full text-sm">🦃 Turkey Sausage</button>
+                            <button data-filter="protein" data-value="Deli Meat" class="filter-btn px-3 py-1 bg-rose-100 hover:bg-rose-200 rounded-full text-sm">🥪 Deli Meat</button>
+                            <button data-filter="protein" data-value="Egg" class="filter-btn px-3 py-1 bg-yellow-100 hover:bg-yellow-200 rounded-full text-sm">🥚 Egg</button>
+                            <button data-filter="protein" data-value="Dairy" class="filter-btn px-3 py-1 bg-blue-100 hover:bg-blue-200 rounded-full text-sm">🧀 Dairy</button>
+                            <button data-filter="protein" data-value="Pizza" class="filter-btn px-3 py-1 bg-orange-100 hover:bg-orange-200 rounded-full text-sm">🍕 Pizza</button>
+                            <button data-filter="protein" data-value="Rice" class="filter-btn px-3 py-1 bg-green-100 hover:bg-green-200 rounded-full text-sm">🍚 Rice</button>
+                            <button data-filter="protein" data-value="Vegetable" class="filter-btn px-3 py-1 bg-green-100 hover:bg-green-200 rounded-full text-sm">🥗 Vegetable</button>
+                        </div>
+                        
+                        <p class="text-xs font-semibold text-gray-600 mb-2">CATEGORY:</p>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <button data-filter="category" data-value="Pasta" class="filter-btn px-3 py-1 bg-yellow-100 hover:bg-yellow-200 rounded-full text-sm">🍝 Pasta</button>
+                            <button data-filter="category" data-value="Rice" class="filter-btn px-3 py-1 bg-orange-100 hover:bg-orange-200 rounded-full text-sm">🍚 Rice</button>
+                            <button data-filter="category" data-value="Burrito" class="filter-btn px-3 py-1 bg-amber-100 hover:bg-amber-200 rounded-full text-sm">🌯 Burrito</button>
+                            <button data-filter="category" data-value="Soup" class="filter-btn px-3 py-1 bg-red-100 hover:bg-red-200 rounded-full text-sm">🍲 Soup</button>
+                            <button data-filter="category" data-value="Side" class="filter-btn px-3 py-1 bg-green-100 hover:bg-green-200 rounded-full text-sm">🥗 Side</button>
+                            <button data-filter="category" data-value="Sandwich" class="filter-btn px-3 py-1 bg-rose-100 hover:bg-rose-200 rounded-full text-sm">🥪 Sandwich</button>
+                            <button data-filter="category" data-value="Main" class="filter-btn px-3 py-1 bg-blue-100 hover:bg-blue-200 rounded-full text-sm">🍽️ Main</button>
+                            <button data-filter="category" data-value="Dip" class="filter-btn px-3 py-1 bg-lime-100 hover:bg-lime-200 rounded-full text-sm">🫕 Dip</button>
+                            <button data-filter="category" data-value="Breakfast" class="filter-btn px-3 py-1 bg-yellow-100 hover:bg-yellow-200 rounded-full text-sm">🍳 Breakfast</button>
+                            <button data-filter="category" data-value="Salad" class="filter-btn px-3 py-1 bg-green-100 hover:bg-green-200 rounded-full text-sm">🥗 Salad</button>
+                            <button data-filter="category" data-value="Wrap" class="filter-btn px-3 py-1 bg-orange-100 hover:bg-orange-200 rounded-full text-sm">🌮 Wrap</button>
+                            <button data-filter="category" data-value="Dessert" class="filter-btn px-3 py-1 bg-pink-100 hover:bg-pink-200 rounded-full text-sm">🍰 Dessert</button>
+                        </div>
+                        
+                        <p class="text-xs font-semibold text-gray-600 mb-2">CUISINE:</p>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <button data-filter="cuisine" data-value="American" class="filter-btn px-3 py-1 bg-blue-100 hover:bg-blue-200 rounded-full text-sm">🇺🇸 American</button>
+                            <button data-filter="cuisine" data-value="Mexican" class="filter-btn px-3 py-1 bg-red-100 hover:bg-red-200 rounded-full text-sm">🌮 Mexican</button>
+                            <button data-filter="cuisine" data-value="Italian" class="filter-btn px-3 py-1 bg-green-100 hover:bg-green-200 rounded-full text-sm">🍝 Italian</button>
+                            <button data-filter="cuisine" data-value="Asian" class="filter-btn px-3 py-1 bg-yellow-100 hover:bg-yellow-200 rounded-full text-sm">🥢 Asian</button>
+                            <button data-filter="cuisine" data-value="Greek" class="filter-btn px-3 py-1 bg-cyan-100 hover:bg-cyan-200 rounded-full text-sm">🇬🇷 Greek</button>
+                        </div>
+                        
+                        <p class="text-xs font-semibold text-gray-600 mb-2">SPEED & METHOD:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button data-filter="quick" data-value="Quick" class="filter-btn px-3 py-1 bg-green-200 hover:bg-green-300 rounded-full text-sm">⚡ Quick (&lt;30 min)</button>
+                            <button data-filter="slowcooker" data-value="Slow Cooker" class="filter-btn px-3 py-1 bg-purple-200 hover:bg-purple-300 rounded-full text-sm">🍲 Slow Cooker</button>
+                        </div>
+                    </div>
+                    
+                    <div id="searchResults" class="space-y-3"></div>
+                </div>
+
+                <!-- Grocery List View -->
+                <div id="groceryView" class="bg-white rounded-xl shadow-lg p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Grocery List</h2>
+                    <div id="groceryContent" class="space-y-4"></div>
+                </div>
+
+                <!-- Full Recipes View -->
+                <div id="recipesView" class="bg-white rounded-xl shadow-lg p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Full Recipes</h2>
+                    <div id="recipesContent" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- Right Column: Meal Plan Sidebar -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Meal Plan (<span id="mealPlanCount">0</span>)</h2>
+                    
+                    <div id="mealPlanList" class="space-y-2 mb-4 min-h-[100px]">
+                        <p class="text-gray-500 text-center py-8">Add recipes to your meal plan</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button
+                            id="generateGroceryBtn"
+                            class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 flex items-center justify-center gap-2"
+                            disabled
+                        >
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+                            </svg>
+                            Generate Grocery List
+                        </button>
+
+                        <button
+                            id="viewRecipesBtn"
+                            class="w-full px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition disabled:bg-gray-300 flex items-center justify-center gap-2"
+                            disabled
+                        >
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                            </svg>
+                            View Full Recipes
+                        </button>
+
+                        <button
+                            id="exportBtn"
+                            class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:bg-gray-300 flex items-center justify-center gap-2"
+                            disabled
+                        >
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                            </svg>
+                            Export Meal Plan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-orange-100 to-red-100 rounded-xl p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2">💡 Tips</h3>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• Click filters to combine them</li>
+                        <li>• Use search bar for keywords</li>
+                        <li>• Active filters shown at top</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let recipes = [];
+        let selectedRecipes = [];
+        let groceryList = null;
+        let activeFilters = {
+            protein: [],
+            category: [],
+            cuisine: [],
+            quick: false,
+            slowcooker: false
+        };
+
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const recipeCount = document.getElementById('recipeCount');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchResults = document.getElementById('searchResults');
+        const mealPlanList = document.getElementById('mealPlanList');
+        const mealPlanCount = document.getElementById('mealPlanCount');
+        const generateGroceryBtn = document.getElementById('generateGroceryBtn');
+        const viewRecipesBtn = document.getElementById('viewRecipesBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const groceryView = document.getElementById('groceryView');
+        const recipesView = document.getElementById('recipesView');
+        const groceryContent = document.getElementById('groceryContent');
+        const recipesContent = document.getElementById('recipesContent');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+        // File upload handler
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const lines = text.split('\n');
+                const headers = lines[0].split('\t').map(h => h.trim());
+                
+                recipes = lines.slice(1)
+                    .filter(line => line.trim())
+                    .map(line => {
+                        const values = line.split('\t');
+                        const recipe = {};
+                        headers.forEach((header, i) => {
+                            recipe[header] = values[i]?.trim() || '';
+                        });
+                        return recipe;
+                    });
+                
+                // Save to localStorage
+                localStorage.setItem('mealPlannerRecipes', JSON.stringify(recipes));
+                
+                recipeCount.textContent = `${recipes.length} recipes loaded`;
+                searchBtn.disabled = false;
+                alert(`Successfully loaded ${recipes.length} recipes!`);
+                
+                // Show all recipes initially
+                displaySearchResults(recipes);
+            } catch (error) {
+                alert('Error reading file. Please make sure it\'s a tab-separated CSV/TSV file.');
+                console.error(error);
+            }
+        });
+        
+        // Load recipes from localStorage on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedRecipes = localStorage.getItem('mealPlannerRecipes');
+            if (savedRecipes) {
+                try {
+                    recipes = JSON.parse(savedRecipes);
+                    recipeCount.textContent = `${recipes.length} recipes loaded`;
+                    searchBtn.disabled = false;
+                    displaySearchResults(recipes);
+                } catch (error) {
+                    console.error('Error loading saved recipes:', error);
+                }
+            }
+        });
+
+        // Filter button click handlers
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filterType = this.getAttribute('data-filter');
+                const filterValue = this.getAttribute('data-value');
+                toggleFilter(filterType, filterValue);
+            });
+        });
+
+        clearFiltersBtn.addEventListener('click', clearAllFilters);
+
+        function toggleFilter(filterType, value) {
+            if (filterType === 'quick' || filterType === 'slowcooker') {
+                activeFilters[filterType] = !activeFilters[filterType];
+            } else {
+                const index = activeFilters[filterType].indexOf(value);
+                if (index > -1) {
+                    activeFilters[filterType].splice(index, 1);
+                } else {
+                    activeFilters[filterType].push(value);
+                }
+            }
+            
+            updateActiveFiltersDisplay();
+            applyFilters();
+        }
+
+        function clearAllFilters() {
+            activeFilters = {
+                protein: [],
+                category: [],
+                cuisine: [],
+                quick: false,
+                slowcooker: false
+            };
+            updateActiveFiltersDisplay();
+            applyFilters();
+        }
+
+        function updateActiveFiltersDisplay() {
+            const container = document.getElementById('activeFilters');
+            const allButtons = document.querySelectorAll('.filter-btn');
+            
+            // Reset all button styles
+            allButtons.forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-offset-1', 'ring-gray-800', 'font-bold');
+            });
+            
+            const tags = [];
+            
+            activeFilters.protein.forEach(p => {
+                tags.push(`<span class="px-2 py-1 bg-red-200 rounded-full text-xs">Protein: ${p}</span>`);
+            });
+            
+            activeFilters.category.forEach(c => {
+                tags.push(`<span class="px-2 py-1 bg-yellow-200 rounded-full text-xs">Category: ${c}</span>`);
+            });
+            
+            activeFilters.cuisine.forEach(c => {
+                tags.push(`<span class="px-2 py-1 bg-green-200 rounded-full text-xs">Cuisine: ${c}</span>`);
+            });
+            
+            if (activeFilters.quick) {
+                tags.push(`<span class="px-2 py-1 bg-green-300 rounded-full text-xs">⚡ Quick</span>`);
+            }
+            
+            if (activeFilters.slowcooker) {
+                tags.push(`<span class="px-2 py-1 bg-purple-300 rounded-full text-xs">🍲 Slow Cooker</span>`);
+            }
+            
+            if (tags.length === 0) {
+                container.innerHTML = '<span class="text-xs text-gray-500 italic">None selected</span>';
+            } else {
+                container.innerHTML = tags.join('');
+                
+                // Highlight active buttons
+                allButtons.forEach(btn => {
+                    const type = btn.getAttribute('data-filter');
+                    const value = btn.getAttribute('data-value');
+                    
+                    if (type === 'quick' || type === 'slowcooker') {
+                        if (activeFilters[type]) {
+                            btn.classList.add('ring-2', 'ring-offset-1', 'ring-gray-800', 'font-bold');
+                        }
+                    } else if (activeFilters[type] && activeFilters[type].includes(value)) {
+                        btn.classList.add('ring-2', 'ring-offset-1', 'ring-gray-800', 'font-bold');
+                    }
+                });
+            }
+        }
+
+        function applyFilters() {
+            if (recipes.length === 0) return;
+            
+            let matches = [...recipes];
+            
+            // Apply protein filters (OR within category)
+            if (activeFilters.protein.length > 0) {
+                matches = matches.filter(recipe => {
+                    const protein = (recipe['Protein'] || '').toLowerCase();
+                    return activeFilters.protein.some(p => 
+                        protein.includes(p.toLowerCase())
+                    );
+                });
+            }
+            
+            // Apply category filters (OR within category)
+            if (activeFilters.category.length > 0) {
+                matches = matches.filter(recipe => {
+                    const category = (recipe['Category'] || '').toLowerCase();
+                    return activeFilters.category.some(c => 
+                        category.includes(c.toLowerCase())
+                    );
+                });
+            }
+            
+            // Apply cuisine filters (OR within category)
+            if (activeFilters.cuisine.length > 0) {
+                matches = matches.filter(recipe => {
+                    const cuisine = (recipe['Cuisine'] || '').toLowerCase();
+                    return activeFilters.cuisine.some(c => 
+                        cuisine.includes(c.toLowerCase())
+                    );
+                });
+            }
+            
+            // Apply quick filter
+            if (activeFilters.quick) {
+                matches = matches.filter(recipe => {
+                    const cookTime = recipe['Cook Time (mins)'] || '';
+                    const numbers = cookTime.toString().match(/\d+/g);
+                    if (!numbers) return false;
+                    return parseInt(numbers[0]) < 30;
+                });
+            }
+            
+            // Apply slow cooker filter
+            if (activeFilters.slowcooker) {
+                matches = matches.filter(recipe => {
+                    const slowCookerTime = recipe['Slow Cooker Time (hours)'] || '';
+                    return slowCookerTime.trim().length > 0;
+                });
+            }
+            
+            displaySearchResults(matches);
+        }
+
+        // Search functionality
+        searchBtn.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+        
+        searchInput.addEventListener('input', (e) => {
+            if (recipes.length > 0 && e.target.value.trim()) {
+                handleSearch();
+            } else if (e.target.value.trim() === '') {
+                applyFilters();
+            }
+        });
+
+        function handleSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                applyFilters();
+                return;
+            }
+            
+            const searchTerms = query.toLowerCase().split(' ').filter(t => t.length > 0);
+            
+            let matches = recipes.filter(recipe => {
+                const searchableText = [
+                    recipe['Recipe Name'],
+                    recipe.Category,
+                    recipe.Protein,
+                    recipe.Cuisine,
+                    recipe['Ingredients (One per line)'],
+                    recipe['Notes/Tags']
+                ].join(' ').toLowerCase();
+                
+                return searchTerms.every(term => searchableText.includes(term));
+            });
+            
+            // Apply active filters to search results
+            if (activeFilters.protein.length > 0) {
+                matches = matches.filter(recipe => {
+                    const protein = (recipe['Protein'] || '').toLowerCase();
+                    return activeFilters.protein.some(p => protein.includes(p.toLowerCase()));
+                });
+            }
+            
+            if (activeFilters.category.length > 0) {
+                matches = matches.filter(recipe => {
+                    const category = (recipe['Category'] || '').toLowerCase();
+                    return activeFilters.category.some(c => category.includes(c.toLowerCase()));
+                });
+            }
+            
+            if (activeFilters.cuisine.length > 0) {
+                matches = matches.filter(recipe => {
+                    const cuisine = (recipe['Cuisine'] || '').toLowerCase();
+                    return activeFilters.cuisine.some(c => cuisine.includes(c.toLowerCase()));
+                });
+            }
+            
+            if (activeFilters.quick) {
+                matches = matches.filter(recipe => {
+                    const cookTime = recipe['Cook Time (mins)'] || '';
+                    const numbers = cookTime.toString().match(/\d+/g);
+                    if (!numbers) return false;
+                    return parseInt(numbers[0]) < 30;
+                });
+            }
+            
+            if (activeFilters.slowcooker) {
+                matches = matches.filter(recipe => {
+                    const slowCookerTime = recipe['Slow Cooker Time (hours)'] || '';
+                    return slowCookerTime.trim().length > 0;
+                });
+            }
+            
+            displaySearchResults(matches);
+        }
+
+        function displaySearchResults(matches) {
+            if (matches.length === 0) {
+                searchResults.innerHTML = '<p class="text-gray-500 text-center py-4">No recipes found. Try different filters or search terms.</p>';
+                return;
+            }
+
+            searchResults.innerHTML = `
+                <p class="text-sm text-gray-600 mb-3">Showing ${matches.length} recipe${matches.length !== 1 ? 's' : ''}</p>
+                ${matches.map((recipe) => `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-800">${recipe['Recipe Name']}</h3>
+                                <p class="text-sm text-gray-600">
+                                    ${recipe.Category} • ${recipe.Cuisine || ''} ${recipe.Cuisine ? '•' : ''} ${recipe.Protein} • ${recipe.Difficulty}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    ${recipe['Cook Time (mins)'] ? `⏱️ ${recipe['Cook Time (mins)']} mins` : ''}
+                                    ${recipe['Slow Cooker Time (hours)'] ? `🍲 ${recipe['Slow Cooker Time (hours)']}` : ''}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    ${recipe.Calories} cal | P: ${recipe['Grams of Prot']}g | C: ${recipe.Carbs}g | F: ${recipe.Fat}g
+                                </p>
+                                ${recipe.Source ? `<p class="text-xs text-blue-600 mt-1">📖 ${recipe.Source}</p>` : ''}
+                            </div>
+                            <button onclick='addToMealPlan(${JSON.stringify(recipe['Recipe Name'])})' class="ml-4 px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-1 text-sm whitespace-nowrap">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        window.addToMealPlan = function(recipeName) {
+            const recipe = recipes.find(r => r['Recipe Name'] === recipeName);
+            if (!recipe || selectedRecipes.find(r => r['Recipe Name'] === recipeName)) return;
+            
+            selectedRecipes.push(recipe);
+            updateMealPlanDisplay();
+        };
+
+        function removeFromMealPlan(recipeName) {
+            selectedRecipes = selectedRecipes.filter(r => r['Recipe Name'] !== recipeName);
+            updateMealPlanDisplay();
+        }
+
+        window.removeFromMealPlan = removeFromMealPlan;
+
+        function updateMealPlanDisplay() {
+            mealPlanCount.textContent = selectedRecipes.length;
+            
+            if (selectedRecipes.length === 0) {
+                mealPlanList.innerHTML = '<p class="text-gray-500 text-center py-8">Add recipes to your meal plan</p>';
+                generateGroceryBtn.disabled = true;
+                viewRecipesBtn.disabled = true;
+                exportBtn.disabled = true;
+            } else {
+                mealPlanList.innerHTML = selectedRecipes.map((recipe) => `
+                    <div class="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-800 text-sm">${recipe['Recipe Name']}</p>
+                            <p class="text-xs text-gray-600">${recipe['Cook Time (mins)'] || recipe['Slow Cooker Time (hours)'] || 'Time varies'}</p>
+                        </div>
+                        <button onclick='removeFromMealPlan(${JSON.stringify(recipe['Recipe Name'])})' class="ml-2 text-red-500 hover:text-red-700">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+                generateGroceryBtn.disabled = false;
+                viewRecipesBtn.disabled = false;
+                exportBtn.disabled = false;
+            }
+        }
+
+        // Generate grocery list
+        generateGroceryBtn.addEventListener('click', () => {
+            if (selectedRecipes.length === 0) return;
+            generateGroceryList();
+        });
+
+        function generateGroceryList() {
+            const categories = {
+                'Produce': [],
+                'Meat & Protein': [],
+                'Dairy & Eggs': [],
+                'Pantry': [],
+                'Spices & Seasonings': [],
+                'Other': []
+            };
+            
+            selectedRecipes.forEach(recipe => {
+                const ingredients = recipe['Ingredients (One per line)'];
+                if (!ingredients) return;
+                
+                const lines = ingredients.split('\n').filter(l => l.trim());
+                
+                lines.forEach(line => {
+                    const cleanLine = line.trim();
+                    if (!cleanLine) return;
+                    
+                    const lower = cleanLine.toLowerCase();
+                    if (lower.match(/chicken|beef|pork|fish|turkey|salmon|shrimp|meat|steak/)) {
+                        categories['Meat & Protein'].push(cleanLine);
+                    } else if (lower.match(/milk|cheese|yogurt|butter|cream|egg/)) {
+                        categories['Dairy & Eggs'].push(cleanLine);
+                    } else if (lower.match(/onion|tomato|pepper|garlic|lettuce|carrot|potato|celery|mushroom|spinach|broccoli|avocado|lime|lemon|cilantro|parsley/)) {
+                        categories['Produce'].push(cleanLine);
+                    } else if (lower.match(/cumin|paprika|oregano|basil|thyme|pepper|salt|cinnamon|chili/)) {
+                        categories['Spices & Seasonings'].push(cleanLine);
+                    } else if (lower.match(/flour|sugar|rice|pasta|bread|oil|sauce|broth|stock|beans|corn/)) {
+                        categories['Pantry'].push(cleanLine);
+                    } else {
+                        categories['Other'].push(cleanLine);
+                    }
+                });
+            });
+            
+            Object.keys(categories).forEach(key => {
+                if (categories[key].length === 0) {
+                    delete categories[key];
+                } else {
+                    categories[key] = [...new Set(categories[key])];
+                }
+            });
+            
+            groceryList = { categories };
+            displayGroceryList();
+        }
+
+        function displayGroceryList() {
+            groceryView.classList.remove('hidden');
+            recipesView.classList.add('hidden');
+            
+            if (!groceryList || !groceryList.categories) {
+                groceryContent.innerHTML = '<p class="text-gray-500">Failed to generate grocery list.</p>';
+                return;
+            }
+
+            groceryContent.innerHTML = Object.entries(groceryList.categories).map(([category, items]) => `
+                <div>
+                    <h3 class="font-semibold text-lg text-gray-700 mb-2">${category}</h3>
+                    <ul class="space-y-1 ml-4">
+                        ${items.map(item => `<li class="text-gray-600">☐ ${item}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+
+        // View full recipes
+        viewRecipesBtn.addEventListener('click', () => {
+            recipesView.classList.remove('hidden');
+            groceryView.classList.add('hidden');
+            
+            recipesContent.innerHTML = selectedRecipes.map((recipe, i) => `
+                <div class="border-b border-gray-200 pb-6 last:border-0">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${recipe['Recipe Name']}</h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        Category: ${recipe.Category} | Cuisine: ${recipe.Cuisine || 'N/A'} | Protein: ${recipe.Protein}<br>
+                        ${recipe['Cook Time (mins)'] ? `⏱️ Cook Time: ${recipe['Cook Time (mins)']} mins` : ''}
+                        ${recipe['Slow Cooker Time (hours)'] ? `🍲 Slow Cooker: ${recipe['Slow Cooker Time (hours)']}` : ''}<br>
+                        Source: ${recipe.Source} | Servings: ${recipe.Servings}
+                    </p>
+                    <div class="bg-orange-50 rounded-lg p-3 mb-3">
+                        <p class="text-sm font-semibold text-gray-700">
+                            ${recipe.Calories} cal | Protein: ${recipe['Grams of Prot']}g | Carbs: ${recipe.Carbs}g | Fat: ${recipe.Fat}g
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <h4 class="font-semibold text-gray-700 mb-1">Ingredients:</h4>
+                        <p class="text-sm text-gray-600 whitespace-pre-line">${recipe['Ingredients (One per line)']}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-1">Instructions:</h4>
+                        <p class="text-sm text-gray-600 whitespace-pre-line">${recipe.Instructions}</p>
+                    </div>
+                    ${recipe['Notes/Tags'] ? `<p class="text-xs text-gray-500 mt-2">Tags: ${recipe['Notes/Tags']}</p>` : ''}
+                </div>
+            `).join('');
+        });
+
+        // Export meal plan
+        exportBtn.addEventListener('click', () => {
+            let exportText = '=== MEAL PLAN ===\n\n';
+            
+            selectedRecipes.forEach((recipe, i) => {
+                exportText += `${i + 1}. ${recipe['Recipe Name']}\n`;
+                exportText += `   Category: ${recipe.Category}\n`;
+                if (recipe['Cook Time (mins)']) exportText += `   Cook Time: ${recipe['Cook Time (mins)']} mins\n`;
+                if (recipe['Slow Cooker Time (hours)']) exportText += `   Slow Cooker: ${recipe['Slow Cooker Time (hours)']}\n`;
+                exportText += `   Source: ${recipe.Source}\n\n`;
+            });
+
+            if (groceryList) {
+                exportText += '\n=== GROCERY LIST ===\n\n';
+                Object.entries(groceryList.categories || {}).forEach(([category, items]) => {
+                    exportText += `${category}:\n`;
+                    items.forEach(item => exportText += `  ☐ ${item}\n`);
+                    exportText += '\n';
+                });
+            }
+
+            selectedRecipes.forEach((recipe, i) => {
+                exportText += `\n=== RECIPE ${i + 1}: ${recipe['Recipe Name']} ===\n\n`;
+                exportText += `Category: ${recipe.Category} | Cuisine: ${recipe.Cuisine || 'N/A'} | Protein: ${recipe.Protein}\n`;
+                if (recipe['Cook Time (mins)']) exportText += `Cook Time: ${recipe['Cook Time (mins)']} mins\n`;
+                if (recipe['Slow Cooker Time (hours)']) exportText += `Slow Cooker Time: ${recipe['Slow Cooker Time (hours)']}\n`;
+                exportText += `Servings: ${recipe.Servings}\n`;
+                exportText += `Calories: ${recipe.Calories} | Protein: ${recipe['Grams of Prot']}g | Carbs: ${recipe.Carbs}g | Fat: ${recipe.Fat}g\n\n`;
+                exportText += `Ingredients:\n${recipe['Ingredients (One per line)']}\n\n`;
+                exportText += `Instructions:\n${recipe.Instructions}\n\n`;
+                if (recipe['Notes/Tags']) exportText += `Notes: ${recipe['Notes/Tags']}\n`;
+                if (recipe.Source) exportText += `Source: ${recipe.Source}\n`;
+            });
+
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'meal-plan.txt';
+            a.click();
+        });
+    </script>
+</body>
+</html>
